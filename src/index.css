@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Montserrat', sans-serif;
+    color: #111111;
+    background-color: #ffffff;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-serif-luxury {
+    font-family: 'Montserrat', sans-serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Custom Utilities */
+.tracking-ultra {
+  letter-spacing: 0.25em;
+}
+
+.tracking-luxury {
+  letter-spacing: 0.15em;
+}
+
+/* Hide scrollbar for clean carousels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth zoom on hover */
+.img-zoom-hover {
+  transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.group:hover .img-zoom-hover {
+  transform: scale(1.04);
+}
