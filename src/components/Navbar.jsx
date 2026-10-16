@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, User, ShoppingBag, Menu, X, ChevronRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { PRODUCTS } from '../data/products';
@@ -24,16 +24,36 @@ export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isProfileHovered, setIsProfileHovered] = useState(false);
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const searchInputRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      setIsScrolled(window.scrollY > 10);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileMenuOpen]);
+
+  // Focus search input when expanded
+  useEffect(() => {
+    if (searchExpanded && searchInputRef.current) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    }
+  }, [searchExpanded]);
+
   const navLinks = [
+    { name: 'NEW ARRIVALS', href: '#products' },
     { name: 'SUITS', href: '#products' },
     { name: 'SHIRTS', href: '#products' },
     { name: 'OUTERWEAR', href: '#tailored' },
@@ -52,10 +72,14 @@ export const Navbar = () => {
 
   const filteredProducts = searchQuery.trim() === ''
     ? []
-    : PRODUCTS.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.category.toLowerCase().includes(searchQuery.toLowerCase()));
+    : PRODUCTS.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.category.toLowerCase().includes(searchQuery.toLowerCase())
+      );
 
   const handleNavClick = (e, href) => {
     e.preventDefault();
+    setMobileMenuOpen(false);
     if (activePage !== 'home') {
       setActivePage('home');
       setTimeout(() => {
@@ -70,159 +94,292 @@ export const Navbar = () => {
     }
   };
 
+  const handleSearchClose = () => {
+    setSearchExpanded(false);
+    setSearchQuery('');
+    setIsSearchOpen(false);
+  };
+
   return (
-    <header className={`sticky top-0 z-40 bg-white transition-all duration-300 border-b border-neutral-100 ${
-      isScrolled ? 'shadow-sm py-3' : 'py-4 lg:py-5'
-    }`}>
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12 flex items-center justify-between">
-        
-        {/* Left: Brand Logo */}
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="lg:hidden p-1 text-neutral-800 hover:text-black focus:outline-none"
-            aria-label="Toggle menu"
+    <>
+      {/* ─── DESKTOP / MOBILE HEADER ─── */}
+      <header
+        className={`sticky top-0 z-50 bg-white transition-all duration-300 ${
+          isScrolled ? 'shadow-[0_1px_0_0_rgba(0,0,0,0.08)]' : 'border-b border-neutral-200'
+        }`}
+        style={{ height: '72px' }}
+      >
+        <div className="h-full max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-10 flex items-center justify-between">
+
+          {/* ── LEFT: Logo ── */}
+          <button
+            onClick={() => { setActivePage('home'); setMobileMenuOpen(false); }}
+            className="flex-shrink-0 focus:outline-none"
+            aria-label="MONZATO Home"
           >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-          
-          <button 
-            onClick={() => setActivePage('home')} 
-            className="flex items-center text-left focus:outline-none"
-          >
-            <span className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-[0.18em] text-neutral-950 font-serif-luxury uppercase">
+            <span
+              className="text-black uppercase select-none"
+              style={{
+                fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                fontSize: 'clamp(20px, 2.2vw, 28px)',
+                fontWeight: 700,
+                letterSpacing: '0.14em',
+                lineHeight: 1,
+              }}
+            >
               MONZATO
             </span>
           </button>
-        </div>
 
-        {/* Center: Navigation Links */}
-        <nav className="hidden lg:flex items-center space-x-10 xl:space-x-14">
-          {navLinks.map((link) => (
-            <a
-              key={link.name}
-              href={link.href}
-              onClick={(e) => handleNavClick(e, link.href)}
-              className="text-[13px] font-semibold tracking-[0.18em] text-neutral-800 hover:text-neutral-500 transition-colors uppercase py-1 relative group"
-            >
-              {link.name}
-              <span className="absolute bottom-0 left-0 w-0 h-[1.5px] bg-neutral-900 transition-all duration-300 group-hover:w-full" />
-            </a>
-          ))}
-        </nav>
+          {/* ── CENTER: Desktop Nav Links ── */}
+          <nav className="hidden lg:flex items-center" style={{ gap: '2.8rem' }}>
+            {navLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                onClick={(e) => handleNavClick(e, link.href)}
+                style={{
+                  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  color: '#000',
+                  textDecoration: 'none',
+                  textTransform: 'uppercase',
+                  padding: '4px 0',
+                  position: 'relative',
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.5'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                {link.name}
+              </a>
+            ))}
+          </nav>
 
-        {/* Right: Search, Account with Hover Dropdown, Bag */}
-        <div className="flex items-center space-x-4 sm:space-x-6">
-          
-          {/* Search Box */}
-          <div className="relative hidden sm:flex items-center border-b border-neutral-300 pb-0.5 hover:border-neutral-900 transition-colors">
-            <input
-              type="text"
-              placeholder="SEARCH..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                if (e.target.value && !isSearchOpen) setIsSearchOpen(true);
-              }}
-              onFocus={() => setIsSearchOpen(true)}
-              className="w-28 xl:w-36 text-[11px] font-medium tracking-[0.15em] bg-transparent text-neutral-900 placeholder-neutral-400 focus:outline-none uppercase"
-            />
-            <button 
-              type="button" 
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="text-neutral-800 hover:text-black transition-colors pl-1"
-              aria-label="Search"
-            >
-              <Search size={17} strokeWidth={1.8} />
-            </button>
+          {/* ── RIGHT: Search, Account, Bag, Beauty (desktop) + Hamburger (mobile) ── */}
+          <div className="flex items-center" style={{ gap: '1.4rem' }}>
 
-            {/* Live Search Dropdown */}
-            {isSearchOpen && searchQuery.trim() !== '' && (
-              <div className="absolute right-0 top-full mt-3 w-80 bg-white border border-neutral-200 shadow-xl rounded-none p-4 z-50">
-                <div className="flex justify-between items-center pb-2 border-b border-neutral-100 mb-2">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-neutral-400">Search Results ({filteredProducts.length})</span>
-                  <button onClick={() => setSearchQuery('')} className="text-[10px] text-neutral-500 hover:text-black">Clear</button>
+            {/* Search Icon / Inline Search */}
+            {!searchExpanded ? (
+              <button
+                onClick={() => setSearchExpanded(true)}
+                className="flex items-center justify-center text-black hover:opacity-50 transition-opacity focus:outline-none"
+                aria-label="Search"
+                style={{ padding: '4px' }}
+              >
+                <Search size={20} strokeWidth={1.5} />
+              </button>
+            ) : (
+              /* Inline search: replaces entire center/right with input bar */
+              <div
+                className="flex items-center"
+                style={{
+                  borderBottom: '1px solid #000',
+                  gap: '8px',
+                  minWidth: '280px',
+                  paddingBottom: '2px',
+                }}
+              >
+                <Search size={16} strokeWidth={1.5} style={{ color: '#000', flexShrink: 0 }} />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="ENTER KEYWORD OR ITEM NO."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    if (e.target.value) setIsSearchOpen(true);
+                    else setIsSearchOpen(false);
+                  }}
+                  style={{
+                    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                    fontSize: '11px',
+                    fontWeight: 400,
+                    letterSpacing: '0.1em',
+                    color: '#000',
+                    background: 'transparent',
+                    border: 'none',
+                    outline: 'none',
+                    flex: 1,
+                    textTransform: 'uppercase',
+                  }}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                      fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      letterSpacing: '0.1em',
+                      color: '#000',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      textTransform: 'uppercase',
+                      flexShrink: 0,
+                    }}
+                  >
+                    CLEAR
+                  </button>
+                )}
+                <button
+                  onClick={handleSearchClose}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#000',
+                    padding: '2px',
+                    flexShrink: 0,
+                  }}
+                  aria-label="Close search"
+                >
+                  <X size={16} strokeWidth={1.5} />
+                </button>
+              </div>
+            )}
+
+            {/* Search Results Dropdown */}
+            {searchExpanded && isSearchOpen && searchQuery.trim() !== '' && (
+              <div
+                className="absolute right-0 bg-white shadow-xl z-50"
+                style={{
+                  top: '72px',
+                  left: 0,
+                  right: 0,
+                  borderTop: '1px solid #e5e5e5',
+                  padding: '24px 40px',
+                  maxHeight: '60vh',
+                  overflowY: 'auto',
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    letterSpacing: '0.2em',
+                    color: '#999',
+                    textTransform: 'uppercase',
+                    marginBottom: '16px',
+                  }}
+                >
+                  {filteredProducts.length} RESULTS FOR "{searchQuery.toUpperCase()}"
                 </div>
                 {filteredProducts.length === 0 ? (
-                  <p className="text-xs text-neutral-500 py-3 text-center">No products found matching "{searchQuery}"</p>
+                  <p style={{
+                    fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                    fontSize: '12px',
+                    color: '#666',
+                    textAlign: 'center',
+                    padding: '24px 0',
+                  }}>
+                    No products found matching "{searchQuery}"
+                  </p>
                 ) : (
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '24px' }}>
                     {filteredProducts.map((p) => (
-                      <div 
+                      <div
                         key={p.id}
                         onClick={() => {
                           openProductDetails(p);
-                          setIsSearchOpen(false);
-                          setSearchQuery('');
+                          handleSearchClose();
                         }}
-                        className="flex items-center gap-3 p-1.5 hover:bg-neutral-50 cursor-pointer transition-colors"
+                        style={{ cursor: 'pointer' }}
                       >
-                        <img src={p.image} alt={p.name} className="w-12 h-12 object-cover bg-neutral-100" />
-                        <div>
-                          <h4 className="text-xs font-semibold text-neutral-900">{p.name}</h4>
-                          <p className="text-[11px] text-neutral-500">{p.formattedPrice}</p>
+                        <div style={{
+                          aspectRatio: '3/4',
+                          background: '#f5f5f5',
+                          overflow: 'hidden',
+                          marginBottom: '8px',
+                        }}>
+                          <img
+                            src={p.image}
+                            alt={p.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s' }}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.04)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                          />
                         </div>
+                        <p style={{
+                          fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          letterSpacing: '0.08em',
+                          color: '#000',
+                          textTransform: 'uppercase',
+                          marginBottom: '2px',
+                        }}>{p.name}</p>
+                        <p style={{
+                          fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                          fontSize: '11px',
+                          color: '#555',
+                        }}>{p.formattedPrice}</p>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             )}
-          </div>
 
-          {/* Mobile Search Icon */}
-          <button 
-            onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className="sm:hidden text-neutral-800 hover:text-black transition-colors p-1"
-            aria-label="Search"
-          >
-            <Search size={20} strokeWidth={1.8} />
-          </button>
+            {/* Account Icon with Hover Dropdown — DESKTOP only */}
+            {!searchExpanded && (
+              <div
+                className="hidden lg:block relative"
+                onMouseEnter={() => setIsProfileHovered(true)}
+                onMouseLeave={() => setIsProfileHovered(false)}
+              >
+                <button
+                  onClick={() => {
+                    if (user) {
+                      setActivePage('account');
+                      setActiveAccountTab('dashboard');
+                    } else {
+                      setIsAuthModalOpen(true);
+                    }
+                  }}
+                  className="flex items-center justify-center text-black hover:opacity-50 transition-opacity focus:outline-none"
+                  aria-label="Account"
+                  style={{ padding: '4px' }}
+                >
+                  <User size={20} strokeWidth={1.5} />
+                </button>
 
-          {/* USER PROFILE WITH HOVER DROPDOWN (Screenshot 3 & 4) */}
-          <div 
-            className="relative"
-            onMouseEnter={() => setIsProfileHovered(true)}
-            onMouseLeave={() => setIsProfileHovered(false)}
-          >
-            <button 
-              onClick={() => {
-                if (user) {
-                  setActivePage('account');
-                  setActiveAccountTab('dashboard');
-                } else {
-                  setIsAuthModalOpen(true);
-                }
-              }}
-              className="text-neutral-800 hover:text-black transition-colors p-1 relative flex items-center"
-              aria-label="Account"
-              title={user ? `Logged in as ${user.firstName}` : 'Login / Register'}
-            >
-              <User size={21} strokeWidth={1.8} />
-            </button>
-
-            {/* Profile Dropdown Popup on Hover (Screenshot 3 & 4) */}
-            {isProfileHovered && user && (
-              <div className="absolute right-0 top-full pt-2 z-50 w-56 animate-in fade-in duration-200">
-                {/* Top Pointer Arrow (Triangle) */}
-                <div className="w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-b-[8px] border-b-white ml-auto mr-2.5 shadow-xs" />
-                
-                <div className="bg-white border border-neutral-200 shadow-xl py-2 px-1">
-                  <div className="px-4 py-2 border-b border-neutral-100 mb-1">
-                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">LOGGED IN AS</p>
-                    <p className="text-xs font-bold text-neutral-900 truncate">{user.firstName} {user.lastName}</p>
-                  </div>
-
-                  <div className="space-y-0.5">
+                {/* Logged-in hover dropdown */}
+                {isProfileHovered && user && (
+                  <div
+                    className="absolute right-0 bg-white border border-neutral-200 shadow-xl z-50"
+                    style={{ top: 'calc(100% + 12px)', minWidth: '220px', padding: '8px 0' }}
+                  >
+                    <div style={{ padding: '12px 20px 10px', borderBottom: '1px solid #f0f0f0' }}>
+                      <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.2em', color: '#999', textTransform: 'uppercase', marginBottom: '3px' }}>SIGNED IN AS</p>
+                      <p style={{ fontSize: '12px', fontWeight: 700, color: '#000', letterSpacing: '0.05em' }}>{user.firstName} {user.lastName}</p>
+                    </div>
                     {user.role === 'admin' && (
                       <a
                         href="http://localhost:5174"
                         target="_blank"
                         rel="noreferrer"
-                        className="w-full text-left px-4 py-2 text-xs font-bold text-amber-600 bg-amber-50/80 hover:bg-amber-100 transition-colors uppercase tracking-wider flex items-center justify-between border-b border-amber-200/60 mb-1"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 20px',
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          letterSpacing: '0.12em',
+                          color: '#92400e',
+                          background: '#fffbeb',
+                          textTransform: 'uppercase',
+                          textDecoration: 'none',
+                          borderBottom: '1px solid #fde68a',
+                        }}
                       >
-                        <span>👑 ADMIN DASHBOARD</span>
-                        <ChevronRight size={12} />
+                        <span>👑 ADMIN</span>
+                        <ChevronRight size={11} />
                       </a>
                     )}
                     {profileMenuItems.map((item) => (
@@ -233,110 +390,339 @@ export const Navbar = () => {
                           setActiveAccountTab(item.tab);
                           setIsProfileHovered(false);
                         }}
-                        className="w-full text-left px-4 py-2 text-xs font-medium text-neutral-600 hover:text-neutral-950 hover:bg-neutral-50 transition-colors uppercase tracking-wider flex items-center justify-between group"
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '9px 20px',
+                          fontSize: '10px',
+                          fontWeight: 400,
+                          letterSpacing: '0.12em',
+                          color: '#333',
+                          textTransform: 'uppercase',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'background 0.15s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'none'}
                       >
                         <span>{item.label}</span>
-                        <ChevronRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <ChevronRight size={10} style={{ opacity: 0.4 }} />
                       </button>
                     ))}
-
-                    <div className="border-t border-neutral-100 pt-1 mt-1">
+                    <div style={{ borderTop: '1px solid #f0f0f0', marginTop: '4px', paddingTop: '4px' }}>
                       <button
-                        onClick={() => {
-                          logoutUser();
-                          setIsProfileHovered(false);
+                        onClick={() => { logoutUser(); setIsProfileHovered(false); }}
+                        style={{
+                          width: '100%',
+                          textAlign: 'left',
+                          padding: '9px 20px',
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          letterSpacing: '0.12em',
+                          color: '#888',
+                          textTransform: 'uppercase',
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'color 0.15s',
                         }}
-                        className="w-full text-left px-4 py-2 text-xs font-semibold text-neutral-500 hover:text-red-600 hover:bg-red-50 transition-colors uppercase tracking-wider"
+                        onMouseEnter={e => e.currentTarget.style.color = '#cc0000'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#888'}
                       >
-                        Logout
+                        SIGN OUT
                       </button>
                     </div>
                   </div>
-                </div>
+                )}
+
+                {/* Not logged-in hover card */}
+                {isProfileHovered && !user && (
+                  <div
+                    className="absolute right-0 bg-white border border-neutral-200 shadow-xl z-50"
+                    style={{ top: 'calc(100% + 12px)', minWidth: '200px', padding: '20px' }}
+                  >
+                    <p style={{ fontSize: '11px', color: '#555', marginBottom: '12px', letterSpacing: '0.04em', lineHeight: 1.5 }}>
+                      Sign in to manage your MONZATO account
+                    </p>
+                    <button
+                      onClick={() => { setIsAuthModalOpen(true); setIsProfileHovered(false); }}
+                      style={{
+                        width: '100%',
+                        padding: '10px',
+                        background: '#000',
+                        color: '#fff',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        letterSpacing: '0.16em',
+                        textTransform: 'uppercase',
+                        border: 'none',
+                        cursor: 'pointer',
+                        transition: 'background 0.2s',
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#333'}
+                      onMouseLeave={e => e.currentTarget.style.background = '#000'}
+                    >
+                      SIGN IN / REGISTER
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Profile Dropdown Popup on Hover when NOT Logged In */}
-            {isProfileHovered && !user && (
-              <div className="absolute right-0 top-full pt-2 z-50 w-52">
-                <div className="w-0 h-0 border-l-[7px] border-l-transparent border-r-[7px] border-r-transparent border-b-[8px] border-b-white ml-auto mr-2.5" />
-                <div className="bg-white border border-neutral-200 shadow-xl p-4 text-center">
-                  <p className="text-xs font-medium text-neutral-600 mb-3">Sign in to manage your MONZATO account</p>
-                  <button
-                    onClick={() => {
-                      setIsAuthModalOpen(true);
-                      setIsProfileHovered(false);
+            {/* Shopping Bag */}
+            {!searchExpanded && (
+              <button
+                onClick={() => setActivePage('cart')}
+                className="flex items-center justify-center text-black hover:opacity-50 transition-opacity focus:outline-none relative"
+                aria-label="Shopping bag"
+                style={{ padding: '4px' }}
+              >
+                <ShoppingBag size={20} strokeWidth={1.5} />
+                {totalItemsCount > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      right: '-6px',
+                      background: '#000',
+                      color: '#fff',
+                      fontSize: '9px',
+                      fontWeight: 700,
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
-                    className="w-full py-2 bg-neutral-950 text-white text-xs font-bold tracking-widest uppercase hover:bg-neutral-800 transition-colors"
                   >
-                    LOGIN / REGISTER
-                  </button>
-                </div>
-              </div>
+                    {totalItemsCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* MONZATO BEAUTY > — Desktop only */}
+            {!searchExpanded && (
+              <a
+                href="#"
+                className="hidden xl:block"
+                style={{
+                  fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  color: '#000',
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap',
+                  paddingLeft: '16px',
+                  borderLeft: '1px solid #ddd',
+                  transition: 'opacity 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.opacity = '0.5'}
+                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              >
+                MONZATO BEAUTY &gt;
+              </a>
+            )}
+
+            {/* Mobile Hamburger */}
+            {!searchExpanded && (
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="lg:hidden flex items-center justify-center text-black hover:opacity-50 transition-opacity focus:outline-none"
+                aria-label="Toggle menu"
+                style={{ padding: '4px' }}
+              >
+                <Menu size={22} strokeWidth={1.5} />
+              </button>
             )}
           </div>
-
-          {/* Shopping Bag Icon with badge & Cart Page Trigger */}
-          <button
-            onClick={() => setActivePage('cart')}
-            className="text-neutral-800 hover:text-black transition-colors p-1 relative flex items-center justify-center group"
-            aria-label="Shopping bag"
-            title="Shopping Bag"
-          >
-            <ShoppingBag size={21} strokeWidth={1.8} />
-            {totalItemsCount > 0 && (
-              <span className="absolute -top-1.5 -right-2 bg-neutral-900 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">
-                {totalItemsCount}
-              </span>
-            )}
-          </button>
-
         </div>
-      </div>
+      </header>
 
-      {/* Mobile Drawer Navigation */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-b border-neutral-200 px-6 py-6 space-y-4">
+      {/* ─── MOBILE FULL-SCREEN MENU OVERLAY (Tom Ford style) ─── */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 60,
+          background: '#fff',
+          transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto',
+        }}
+      >
+        {/* Mobile Overlay Top Bar */}
+        <div
+          style={{
+            height: '72px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '0 24px',
+            flexShrink: 0,
+            borderBottom: '1px solid #e5e5e5',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+              fontSize: '20px',
+              fontWeight: 700,
+              letterSpacing: '0.14em',
+              color: '#000',
+              textTransform: 'uppercase',
+            }}
+          >
+            MONZATO
+          </span>
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#000',
+              padding: '4px',
+            }}
+            aria-label="Close menu"
+          >
+            <X size={22} strokeWidth={1.5} />
+          </button>
+        </div>
+
+        {/* Mobile Nav Links */}
+        <nav style={{ flex: 1, padding: '24px 24px 0' }}>
           {navLinks.map((link) => (
             <a
               key={link.name}
               href={link.href}
-              onClick={(e) => {
-                setMobileMenuOpen(false);
-                handleNavClick(e, link.href);
+              onClick={(e) => { handleNavClick(e, link.href); setMobileMenuOpen(false); }}
+              style={{
+                display: 'block',
+                fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                fontSize: '22px',
+                fontWeight: 700,
+                letterSpacing: '0.05em',
+                color: '#000',
+                textDecoration: 'none',
+                textTransform: 'uppercase',
+                padding: '14px 0',
+                borderBottom: '1px solid #f0f0f0',
+                transition: 'opacity 0.2s',
               }}
-              className="block text-sm font-semibold tracking-widest text-neutral-900 hover:text-neutral-500 uppercase py-1"
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.5'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
             >
               {link.name}
             </a>
           ))}
-          <div className="pt-4 border-t border-neutral-100 flex flex-col space-y-2 text-xs text-neutral-600 font-medium">
-            <button 
-              onClick={() => {
-                setMobileMenuOpen(false);
-                if (user) {
-                  setActivePage('account');
-                  setActiveAccountTab('dashboard');
-                } else {
-                  setIsAuthModalOpen(true);
-                }
-              }} 
-              className="text-left py-1 font-bold uppercase hover:text-black"
-            >
-              {user ? `ACCOUNT (${user.firstName})` : 'LOGIN / REGISTER'}
-            </button>
-            <button 
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setActivePage('cart');
-              }} 
-              className="text-left py-1 font-bold uppercase hover:text-black"
-            >
-              SHOPPING BAG ({totalItemsCount})
-            </button>
-          </div>
+          <a
+            href="#"
+            style={{
+              display: 'block',
+              fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+              fontSize: '22px',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+              color: '#000',
+              textDecoration: 'none',
+              textTransform: 'uppercase',
+              padding: '14px 0',
+              borderBottom: '1px solid #f0f0f0',
+            }}
+          >
+            MONZATO BEAUTY &gt;
+          </a>
+        </nav>
+
+        {/* Mobile Utility Links */}
+        <div style={{ padding: '24px', borderTop: '1px solid #e5e5e5', marginTop: '24px' }}>
+          <button
+            onClick={() => {
+              setMobileMenuOpen(false);
+              if (user) { setActivePage('account'); setActiveAccountTab('dashboard'); }
+              else setIsAuthModalOpen(true);
+            }}
+            style={{
+              display: 'block',
+              width: '100%',
+              textAlign: 'left',
+              fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+              fontSize: '13px',
+              fontWeight: 400,
+              letterSpacing: '0.1em',
+              color: '#000',
+              textTransform: 'uppercase',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '12px 0',
+              borderBottom: '1px solid #f0f0f0',
+            }}
+          >
+            {user ? `MY ACCOUNT (${user.firstName})` : 'SIGN IN'}
+          </button>
+          <button
+            onClick={() => { setMobileMenuOpen(false); setActivePage('cart'); }}
+            style={{
+              display: 'block',
+              width: '100%',
+              textAlign: 'left',
+              fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+              fontSize: '13px',
+              fontWeight: 400,
+              letterSpacing: '0.1em',
+              color: '#000',
+              textTransform: 'uppercase',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '12px 0',
+            }}
+          >
+            SHOPPING BAG ({totalItemsCount})
+          </button>
         </div>
+
+        {/* Mobile Region Footer */}
+        <div style={{ padding: '16px 24px', borderTop: '1px solid #e5e5e5' }}>
+          <span style={{
+            fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+            fontSize: '11px',
+            fontWeight: 700,
+            letterSpacing: '0.1em',
+            color: '#000',
+            textTransform: 'uppercase',
+            textDecoration: 'underline',
+            textDecorationColor: '#000',
+          }}>
+            INDIA / INR
+          </span>
+        </div>
+      </div>
+
+      {/* Backdrop for mobile menu */}
+      {mobileMenuOpen && (
+        <div
+          onClick={() => setMobileMenuOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 59,
+            background: 'rgba(0,0,0,0.4)',
+          }}
+        />
       )}
-    </header>
+    </>
   );
 };

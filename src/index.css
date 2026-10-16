@@ -1,20 +1,64 @@
 @import "tailwindcss";
 
+/* ── Tom Ford Inspired Typography ── */
+/* Tom Ford uses Helvetica Neue / Arial — no web font import needed, system font */
+
 @layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
-    font-family: 'Montserrat', sans-serif;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     color: #111111;
     background-color: #ffffff;
     overflow-x: hidden;
+    font-size: 13px;
+    line-height: 1.6;
   }
 
-  h1, h2, h3, .font-serif-luxury {
-    font-family: 'Montserrat', sans-serif;
-    letter-spacing: -0.01em;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    line-height: 1.1;
+  }
+
+  /* Tom Ford uses ::selection with black bg */
+  ::selection {
+    background-color: #000;
+    color: #fff;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  button {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+
+  /* Smooth scroll */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
-/* Custom Utilities */
+/* ── Legacy custom utilities (preserve existing) ── */
+.font-serif-luxury {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 700;
+}
+
 .tracking-ultra {
   letter-spacing: 0.25em;
 }
@@ -38,4 +82,83 @@
 }
 .group:hover .img-zoom-hover {
   transform: scale(1.04);
+}
+
+/* ── Tom Ford Design Tokens ── */
+:root {
+  --tf-black: #000000;
+  --tf-white: #ffffff;
+  --tf-bg-warm: #f0eeec;         /* Tom Ford footer/section bg */
+  --tf-bg-light: #f5f4f2;
+  --tf-text-primary: #111111;
+  --tf-text-secondary: #555555;
+  --tf-text-muted: #999999;
+  --tf-border: #e0e0e0;
+  --tf-border-dark: #cccccc;
+  --tf-nav-height: 72px;
+  --tf-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* ── Tom Ford Button Base ── */
+.btn-tf {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--tf-font);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  border: 1.5px solid transparent;
+  outline: none;
+  padding: 10px 24px;
+}
+
+.btn-tf-outline {
+  background: transparent;
+  border-color: #000;
+  color: #000;
+}
+.btn-tf-outline:hover {
+  background: #000;
+  color: #fff;
+}
+
+.btn-tf-solid {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+}
+.btn-tf-solid:hover {
+  background: #333;
+}
+
+/* ── Section headline style ── */
+.tf-section-headline {
+  font-family: var(--tf-font);
+  font-size: clamp(13px, 1.1vw, 16px);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #000;
+}
+
+/* ── Product card label ── */
+.tf-label {
+  font-family: var(--tf-font);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.tf-price {
+  font-family: var(--tf-font);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: #555;
 }

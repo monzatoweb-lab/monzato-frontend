@@ -1,61 +1,244 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-export const Footer = () => {
-  const footerLinks = [
-    { name: 'THE STORY', href: '/the-story' },
-    { name: 'CONTACT US', href: '/contact' },
-    { name: 'DELIVERY & RETURNS', href: '/delivery-returns' },
-    { name: 'PRIVACY POLICY', href: '/privacy-policy' },
-  ];
+const TF_FONT = '"Helvetica Neue", Helvetica, Arial, sans-serif';
 
+const FooterLink = ({ to, href, children }) => {
+  const style = {
+    fontFamily: TF_FONT,
+    fontSize: '11px',
+    fontWeight: 400,
+    letterSpacing: '0.06em',
+    color: '#111',
+    textDecoration: 'none',
+    textTransform: 'uppercase',
+    display: 'block',
+    padding: '5px 0',
+    transition: 'opacity 0.2s',
+  };
+
+  if (href) {
+    return (
+      <a
+        href={href}
+        style={style}
+        onMouseEnter={e => e.currentTarget.style.opacity = '0.5'}
+        onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+        target={href.startsWith('http') ? '_blank' : undefined}
+        rel={href.startsWith('http') ? 'noopener noreferrer' : undefined}
+      >
+        {children}
+      </a>
+    );
+  }
   return (
-    <footer className="w-full bg-white border-t border-neutral-100 py-6 sm:py-8">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
-        
+    <Link
+      to={to}
+      style={style}
+      onMouseEnter={e => e.currentTarget.style.opacity = '0.5'}
+      onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+    >
+      {children}
+    </Link>
+  );
+};
 
-        <div className="flex items-center">
-          <a href="#" className="text-2xl sm:text-3xl font-extrabold tracking-[0.18em] text-black font-serif-luxury uppercase">
-            MONZATO
-          </a>
+const ColHeader = ({ children }) => (
+  <p style={{
+    fontFamily: TF_FONT,
+    fontSize: '11px',
+    fontWeight: 700,
+    letterSpacing: '0.12em',
+    color: '#000',
+    textTransform: 'uppercase',
+    marginBottom: '16px',
+  }}>
+    {children}
+  </p>
+);
+
+export const Footer = () => {
+  return (
+    <footer
+      style={{
+        background: '#f0eeec',
+        borderTop: '1px solid #ddd',
+      }}
+    >
+      {/* ── Main Footer Grid ── */}
+      <div
+        style={{
+          maxWidth: '1600px',
+          margin: '0 auto',
+          padding: '60px 40px 40px',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gap: '40px',
+        }}
+      >
+        {/* Customer Service */}
+        <div>
+          <ColHeader>Customer Service</ColHeader>
+          <FooterLink to="/delivery-returns">Track & Return Order</FooterLink>
+          <FooterLink to="/contact">Contact Us</FooterLink>
+          <FooterLink href="#">Store Locator</FooterLink>
+          <FooterLink href="#">Made to Measure</FooterLink>
+          <FooterLink href="#">FAQ</FooterLink>
+          <FooterLink to="/delivery-returns">Shipping & Returns</FooterLink>
         </div>
 
-        <nav className="flex flex-wrap items-center justify-center gap-x-4 sm:gap-x-6 gap-y-2">
-          {footerLinks.map((link, index) => (
-            <React.Fragment key={link.name}>
-              <Link
-                to={link.href}
-                className="text-[10px] sm:text-[11px] font-semibold tracking-[0.15em] text-neutral-800 hover:text-neutral-500 transition-colors uppercase"
-              >
-                {link.name}
-              </Link>
-              {index < footerLinks.length - 1 && (
-                <span className="text-neutral-400 text-xs font-light select-none">|</span>
-              )}
-            </React.Fragment>
-          ))}
-        </nav>
+        {/* The Company */}
+        <div>
+          <ColHeader>The Company</ColHeader>
+          <FooterLink to="/the-story">Our Story</FooterLink>
+          <FooterLink to="/privacy-policy">Privacy Policy</FooterLink>
+          <FooterLink href="#">Accessibility</FooterLink>
+          <FooterLink href="#">Sustainability</FooterLink>
+          <FooterLink href="#">Cookie Policy</FooterLink>
+        </div>
 
-  
-        <div className="flex items-center">
-          <a
-            href="https://instagram.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-neutral-900 hover:text-neutral-600 transition-colors p-1"
-            aria-label="Instagram"
-            title="Instagram"
+        {/* Follow Us */}
+        <div>
+          <ColHeader>Follow Us</ColHeader>
+          <FooterLink href="https://instagram.com">Instagram</FooterLink>
+          <FooterLink href="https://facebook.com">Facebook</FooterLink>
+          <FooterLink href="https://youtube.com">YouTube</FooterLink>
+          <FooterLink href="https://pinterest.com">Pinterest</FooterLink>
+          <FooterLink href="https://x.com">X</FooterLink>
+        </div>
+
+        {/* Newsletter */}
+        <div style={{ gridColumn: 'span 1' }}>
+          <ColHeader>Subscribe to Newsletter</ColHeader>
+          <p style={{
+            fontFamily: TF_FONT,
+            fontSize: '11px',
+            color: '#555',
+            lineHeight: 1.7,
+            marginBottom: '16px',
+            letterSpacing: '0.02em',
+          }}>
+            Subscribe to receive updates on new arrivals, exclusive offers and more.
+          </p>
+          <form
+            onSubmit={e => e.preventDefault()}
+            style={{ display: 'flex', gap: '0', borderBottom: '1px solid #000' }}
           >
-            <svg
-              className="w-5 h-5 fill-current"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+            <input
+              type="email"
+              placeholder="EMAIL ADDRESS"
+              style={{
+                flex: 1,
+                fontFamily: TF_FONT,
+                fontSize: '10px',
+                fontWeight: 400,
+                letterSpacing: '0.1em',
+                color: '#000',
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                padding: '6px 0',
+                textTransform: 'uppercase',
+              }}
+            />
+            <button
+              type="submit"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: TF_FONT,
+                fontSize: '18px',
+                color: '#000',
+                padding: '0 4px 2px',
+                lineHeight: 1,
+              }}
+              aria-label="Subscribe"
             >
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
-            </svg>
-          </a>
+              →
+            </button>
+          </form>
         </div>
+      </div>
 
+      {/* ── Logo Row ── */}
+      <div
+        style={{
+          maxWidth: '1600px',
+          margin: '0 auto',
+          padding: '0 40px 32px',
+        }}
+      >
+        <button
+          style={{
+            fontFamily: TF_FONT,
+            fontSize: 'clamp(28px, 4vw, 48px)',
+            fontWeight: 700,
+            letterSpacing: '0.14em',
+            color: '#000',
+            textTransform: 'uppercase',
+            background: 'none',
+            border: 'none',
+            cursor: 'default',
+            padding: 0,
+          }}
+        >
+          MONZATO
+        </button>
+      </div>
+
+      {/* ── Bottom Bar ── */}
+      <div
+        style={{
+          borderTop: '1px solid #ddd',
+          maxWidth: '1600px',
+          margin: '0 auto',
+          padding: '16px 40px',
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+        }}
+      >
+        {[
+          { label: 'Site Map', to: '#' },
+          { label: 'Privacy Policy', to: '/privacy-policy' },
+          { label: 'Terms & Conditions', to: '#' },
+        ].map((item, i, arr) => (
+          <React.Fragment key={item.label}>
+            <Link
+              to={item.to}
+              style={{
+                fontFamily: TF_FONT,
+                fontSize: '10px',
+                fontWeight: 400,
+                letterSpacing: '0.1em',
+                color: '#444',
+                textDecoration: 'none',
+                textTransform: 'uppercase',
+                transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.5'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            >
+              {item.label}
+            </Link>
+            {i < arr.length - 1 && (
+              <span style={{ color: '#aaa', fontSize: '10px', userSelect: 'none' }}>|</span>
+            )}
+          </React.Fragment>
+        ))}
+        <span style={{ color: '#aaa', fontSize: '10px', userSelect: 'none' }}>|</span>
+        <span style={{
+          fontFamily: TF_FONT,
+          fontSize: '10px',
+          letterSpacing: '0.1em',
+          color: '#444',
+          textTransform: 'uppercase',
+        }}>
+          © MONZATO ALL RIGHTS RESERVED
+        </span>
       </div>
     </footer>
   );

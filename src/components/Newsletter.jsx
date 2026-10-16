@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ChevronRight, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useCart } from '../context/CartContext';
-import { Button, Input } from './common';
+
+const TF_FONT = '"Helvetica Neue", Helvetica, Arial, sans-serif';
 
 export const Newsletter = () => {
   const [email, setEmail] = useState('');
@@ -23,44 +24,117 @@ export const Newsletter = () => {
   };
 
   return (
-    <section className="py-16 sm:py-24 bg-[#f6f6f6] text-center">
-      <div className="max-w-2xl mx-auto px-4">
-        
-        <h2 className="text-xl sm:text-2xl font-bold tracking-[0.2em] text-neutral-950 uppercase font-serif-luxury mb-2">
-          NEWSLETTER
+    <section
+      style={{
+        background: '#fff',
+        borderTop: '1px solid #e5e5e5',
+        borderBottom: '1px solid #e5e5e5',
+        padding: '60px 24px',
+        textAlign: 'center',
+      }}
+    >
+      <div style={{ maxWidth: '560px', margin: '0 auto' }}>
+
+        <h2
+          style={{
+            fontFamily: TF_FONT,
+            fontSize: '12px',
+            fontWeight: 700,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: '#000',
+            marginBottom: '10px',
+          }}
+        >
+          Subscribe to Newsletter
         </h2>
 
-        <p className="text-[11px] sm:text-xs font-medium tracking-[0.25em] text-neutral-400 uppercase mb-8">
-          STAY UP TO DATE TO GET LATEST MONZATO NEWS
+        <p
+          style={{
+            fontFamily: TF_FONT,
+            fontSize: '11px',
+            fontWeight: 400,
+            letterSpacing: '0.06em',
+            color: '#666',
+            marginBottom: '28px',
+            lineHeight: 1.7,
+          }}
+        >
+          Subscribe to receive updates on new arrivals, exclusive offers and latest news from MONZATO.
         </p>
 
         {isSubmitted ? (
-          <div className="flex items-center justify-center gap-2 py-3 px-6 bg-emerald-50 text-emerald-800 text-xs font-semibold tracking-wider rounded-none max-w-md mx-auto border border-emerald-200">
-            <Check size={16} />
-            <span>YOU ARE SUBSCRIBED TO MONZATO NEWSLETTER</span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              padding: '14px 20px',
+              border: '1px solid #000',
+              fontFamily: TF_FONT,
+              fontSize: '10px',
+              fontWeight: 700,
+              letterSpacing: '0.16em',
+              textTransform: 'uppercase',
+              color: '#000',
+            }}
+          >
+            <Check size={14} strokeWidth={2} />
+            <span>SUBSCRIBED</span>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex items-stretch justify-center max-w-md mx-auto">
-            <div className="flex-1">
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="ENTER YOUR EMAIL ADDRESS"
-                required
-                className="border-r-0 py-3.5"
-              />
-            </div>
-            <Button
-              type="submit"
-              variant="primary"
-              className="px-5 py-3.5 border-l-0"
-              aria-label="Subscribe"
-              icon={ChevronRight}
+          <form
+            onSubmit={handleSubmit}
+            style={{
+              display: 'flex',
+              alignItems: 'stretch',
+              borderBottom: '1.5px solid #000',
+              maxWidth: '420px',
+              margin: '0 auto',
+            }}
+          >
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="EMAIL ADDRESS"
+              required
+              style={{
+                flex: 1,
+                fontFamily: TF_FONT,
+                fontSize: '11px',
+                fontWeight: 400,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: '#000',
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                padding: '8px 0',
+              }}
             />
+            <button
+              type="submit"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: TF_FONT,
+                fontSize: '20px',
+                color: '#000',
+                padding: '0 4px 4px',
+                lineHeight: 1,
+                transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.4'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+              aria-label="Subscribe"
+            >
+              →
+            </button>
           </form>
         )}
-
       </div>
     </section>
   );
