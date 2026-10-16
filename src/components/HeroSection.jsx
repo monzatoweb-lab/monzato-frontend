@@ -12,7 +12,7 @@ const SLIDES = [
     href: '#products',
   },
   {
-    image: '/images/hero_tailored.jpg',
+    image: '/images/hero_midnight.jpg',
     label: "TAILORED FOR YOU",
     headline: "BESPOKE SUITS",
     cta: 'EXPLORE',

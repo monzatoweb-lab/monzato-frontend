@@ -1,473 +1,441 @@
-import React, { useState } from 'react';
-import { Star, ChevronDown, ChevronUp, ShoppingBag, ArrowLeft, Check, ZoomIn, Film } from 'lucide-react';
-import { useCart } from '../context/CartContext';
-import { Button, Input, Modal, SectionHeader } from './common';
+import React, { useState } from "react";
+import { Heart, ShoppingBag, ChevronDown, ChevronUp, ArrowLeft, Star, Check, X } from "lucide-react";
+import { useCart } from "../context/CartContext";
+
+const TF = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+
+const SIZES = ["XS", "S", "M", "L", "XL", "XXL"];
+
+const SUIT_SIZES = ["36", "38", "40", "42", "44", "46", "48", "50"];
+
+/* Accordion row */
+const Accordion = ({ label, children, defaultOpen = false }) => {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div style={{ borderTop: "1px solid #e8e8e8" }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "14px 0",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          fontFamily: TF,
+          fontSize: "10px",
+          fontWeight: 700,
+          letterSpacing: "0.18em",
+          textTransform: "uppercase",
+          color: "#000",
+        }}
+      >
+        <span>{label}</span>
+        {open ? <ChevronUp size={14} strokeWidth={1.5} /> : <ChevronDown size={14} strokeWidth={1.5} />}
+      </button>
+      <div
+        style={{
+          maxHeight: open ? "600px" : "0",
+          overflow: "hidden",
+          transition: "max-height 0.3s cubic-bezier(0.4,0,0.2,1)",
+        }}
+      >
+        <div style={{ paddingBottom: 18 }}>{children}</div>
+      </div>
+    </div>
+  );
+};
 
 export const ProductDetailPage = () => {
   const {
-    selectedProduct,
-    products,
-    addToCart,
-    setIsCartOpen,
-    setActivePage,
-    user,
-    showToast
+    selectedProduct, products, addToCart, setIsCartOpen,
+    setActivePage, wishlist, toggleWishlist, showToast, user,
   } = useCart();
 
-  // Fallback to first product if none selected
   const product = selectedProduct || products[0] || {
-    id: 'deep-river-suit',
-    name: 'Deep River Suit',
-    category: 'SUITS',
+    id: "deep-river-suit",
+    name: "Deep River Suit",
+    category: "SUITS",
     price: 1640.00,
-    formattedPrice: '$1,640.00',
-    image: '/images/suit_blue.jpg',
-    hoverImage: '/images/suit_chartreuse.jpg',
-    color: 'Electric Royal Blue',
-    fit: 'Modern Slim Tailored',
-    material: '100% Super 150s Italian Wool',
-    description: 'Tailored from superfine wool in an opulent deep river blue, this suit embodies fluid sophistication. The sculpted shoulders and defined peak lapels create a commanding silhouette, while the feather light weave moves with quiet ease. A masterclass in modern tailoring where depth of color meets precision craftsmanship.',
+    formattedPrice: "$1,640.00",
+    image: "/images/suit_blue.jpg",
+    hoverImage: "/images/suit_chartreuse.jpg",
+    color: "Electric Royal Blue",
+    fit: "Modern Slim Tailored",
+    material: "100% Super 150s Italian Wool",
+    description: "Masterfully crafted in Italy, the Deep River Suit features a vibrant royal blue tone with peak lapels, horn buttons, and handcrafted shoulder stitching for an impeccable silhouette.",
   };
 
-  const sizes = ['34', '36', '38', '40', '42', '44', '46', '48', '50', '52', '54'];
-  const [selectedSize, setSelectedSize] = useState('44');
-  const [detailCareOpen, setDetailCareOpen] = useState(true);
-  const [sizeChartOpen, setSizeChartOpen] = useState(false);
-  const [zoomImage, setZoomImage] = useState(null);
+  const isSuit = product.category?.toUpperCase() === "SUITS";
+  const sizeOptions = isSuit ? SUIT_SIZES : SIZES;
 
-  // Collect all gallery images & video
-  const galleryList = Array.isArray(product.images) && product.images.length > 0
+  const pId = product.id || product._id || product.slug;
+  const isWishlisted = wishlist?.includes(pId);
+
+  const galleryImages = Array.isArray(product.images) && product.images.length > 0
     ? product.images
-    : [
-        product.image || '/images/suit_blue.jpg',
-        '/images/hero_chartreuse.jpg',
-        product.hoverImage || '/images/suit_chartreuse.jpg',
-      ].filter(Boolean);
+    : [product.image, product.hoverImage].filter(Boolean);
 
-  const videoUrl = product.video || null;
+  const [activeImg, setActiveImg] = useState(0);
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [sizeError, setSizeError] = useState(false);
+  const [addedFlash, setAddedFlash] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
+  const [sizeGuideOpen, setSizeGuideOpen] = useState(false);
 
-  // Reviews state
-  const [reviews, setReviews] = useState([
-    {
-      id: 1,
-      author: 'Derek',
-      rating: 5,
-      comment: 'The deep river suit is extremely well made. The stitching is clean all around and the seams are reinforced nicely.',
-      date: '2 weeks ago',
-    },
-    {
-      id: 2,
-      author: 'Marcus V.',
-      rating: 5,
-      comment: 'Phenomenal tailoring and Italian wool quality. Fits true to size and looks magnificent.',
-      date: '1 month ago',
-    },
-    {
-      id: 3,
-      author: 'Julian R.',
-      rating: 5,
-      comment: 'Impeccable silhouette. Received countless compliments at the evening gala.',
-      date: '2 months ago',
-    }
+  /* Reviews */
+  const [reviews] = useState([
+    { id: 1, author: "Derek A.", rating: 5, comment: "The deep river suit is extremely well made. The stitching is clean all around and the seams are reinforced nicely.", date: "2 weeks ago" },
+    { id: 2, author: "Marcus V.", rating: 5, comment: "Phenomenal tailoring and Italian wool quality. Fits true to size and looks magnificent.", date: "1 month ago" },
+    { id: 3, author: "Julian R.", rating: 5, comment: "Impeccable silhouette. Received countless compliments at the evening gala.", date: "2 months ago" },
   ]);
 
-  const [newRating, setNewRating] = useState(5);
-  const [newComment, setNewComment] = useState('');
-  const [submittingReview, setSubmittingReview] = useState(false);
-
-  const handleAddReview = (e) => {
-    e.preventDefault();
-    if (!newComment.trim()) return;
-    setSubmittingReview(true);
-
-    setTimeout(() => {
-      const added = {
-        id: Date.now(),
-        author: `${user?.firstName || 'Customer'} ${user?.lastName?.[0] || ''}.`,
-        rating: Number(newRating),
-        comment: newComment.trim(),
-        date: 'Just now',
-      };
-      setReviews([added, ...reviews]);
-      setNewComment('');
-      setSubmittingReview(false);
-      showToast('Thank you! Your review has been submitted.');
-    }, 600);
-  };
-
   const handleAddToCart = () => {
+    if (!selectedSize) { setSizeError(true); return; }
+    setSizeError(false);
     addToCart(product, selectedSize);
-    setIsCartOpen(true);
+    setAddedFlash(true);
+    setTimeout(() => { setAddedFlash(false); setIsCartOpen(true); }, 800);
   };
 
-  const handleApplePay = () => {
-    addToCart(product, selectedSize);
-    setIsCartOpen(true);
-    showToast('Redirecting to Apple Pay Checkout...');
-  };
+  const relatedProducts = products.filter(p => (p.id || p._id) !== pId).slice(0, 4);
 
   return (
-    <div className="bg-white text-neutral-900 min-h-screen py-6 sm:py-10">
-      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-12">
-        
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center justify-between pb-6 mb-6 border-b border-neutral-100 text-xs tracking-widest text-neutral-500 uppercase font-medium">
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setActivePage('home')}
-              className="hover:text-black transition-colors cursor-pointer"
-            >
-              HOME
-            </button>
-            <span>/</span>
-            <button
-              onClick={() => setActivePage('home')}
-              className="hover:text-black transition-colors cursor-pointer"
-            >
-              {product.category || 'SUITS'}
-            </button>
-            <span>/</span>
-            <span className="text-black font-semibold">{product.name}</span>
-          </div>
+    <>
+      <style>{`
+        .pdp-grid { display: grid; grid-template-columns: 260px 1fr 340px; gap: 0; min-height: 80vh; }
+        .pdp-thumb-strip { display: flex; flex-direction: column; gap: 8px; padding: 0 16px 0 0; }
+        .pdp-thumb { width: 60px; height: 72px; object-fit: cover; background: #f2f2f2; cursor: pointer; border: 1.5px solid transparent; transition: border-color 0.2s; flex-shrink: 0; }
+        .pdp-thumb.active { border-color: #000; }
+        .pdp-main-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; background: #f2f2f2; display: block; cursor: zoom-in; transition: transform 0.5s ease; }
+        .pdp-main-img:hover { transform: scale(1.02); }
+        .pdp-right { padding: 0 0 0 clamp(24px, 3vw, 52px); position: sticky; top: 80px; align-self: start; }
+        .pdp-size-btn {
+          padding: 10px 0;
+          font-family: ${TF};
+          font-size: 11px;
+          font-weight: 400;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          border: 1px solid #d0d0d0;
+          background: #fff;
+          cursor: pointer;
+          transition: border-color 0.15s, background 0.15s, color 0.15s;
+          color: #000;
+        }
+        .pdp-size-btn:hover { border-color: #000; }
+        .pdp-size-btn.selected { background: #000; color: #fff; border-color: #000; font-weight: 700; }
+        .pdp-add-btn {
+          width: 100%;
+          padding: 16px;
+          background: #000;
+          color: #fff;
+          font-family: ${TF};
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.22em;
+          text-transform: uppercase;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          transition: background 0.2s;
+        }
+        .pdp-add-btn:hover { background: #1a1a1a; }
+        .pdp-add-btn.flash { background: #1a5c2a; }
+        .pdp-left-info { padding: 0 clamp(20px, 2.5vw, 40px) 0 0; }
+        .related-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(12px, 1.5vw, 24px); }
+        .related-card { cursor: pointer; }
+        .related-img { width: 100%; aspect-ratio: 3/4; object-fit: cover; background: #f2f2f2; display: block; transition: transform 0.4s; }
+        .related-card:hover .related-img { transform: scale(1.03); }
 
-          <Button
-            variant="link"
-            size="sm"
-            icon={ArrowLeft}
-            onClick={() => setActivePage('home')}
-            className="hidden sm:inline-flex text-neutral-700 hover:text-black font-bold uppercase tracking-widest text-xs"
+        /* Lightbox */
+        .lb-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 100; display: flex; align-items: center; justify-content: center; }
+        .lb-img { max-height: 90vh; max-width: 90vw; object-fit: contain; }
+
+        /* Mobile */
+        @media (max-width: 900px) {
+          .pdp-grid { grid-template-columns: 1fr; }
+          .pdp-thumb-strip { flex-direction: row; padding: 8px 0 0 0; justify-content: center; }
+          .pdp-right { position: static; padding: 24px 0 0 0; }
+          .pdp-left-info { padding: 0 0 20px 0; border-bottom: 1px solid #eee; margin-bottom: 20px; }
+          .related-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+          .related-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+      `}</style>
+
+      <div style={{ background: "#fff", minHeight: "100vh" }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "clamp(20px,3vw,40px) clamp(20px,4vw,60px)" }}>
+
+          {/* Back */}
+          <button
+            onClick={() => setActivePage("home")}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", fontFamily: TF, fontSize: "10px", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#000", marginBottom: 32, padding: 0 }}
+            onMouseEnter={e => e.currentTarget.style.opacity = "0.5"}
+            onMouseLeave={e => e.currentTarget.style.opacity = "1"}
           >
-            BACK TO COLLECTION
-          </Button>
-        </div>
+            <ArrowLeft size={14} strokeWidth={1.5} />
+            Back to Collection
+          </button>
 
-        {/* Main Product Layout Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start mb-20">
-          
-          {/* LEFT COLUMN: Multi-Image & Video Gallery Grid (7 Cols) */}
-          <div className="lg:col-span-7">
-            
-            {/* Grid of Images & Video */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              
-              {/* Media Item 1: Studio Suit Photo */}
-              <div 
-                onClick={() => setZoomImage(galleryList[0] || product.image)}
-                className="relative bg-[#f4f4f4] aspect-[4/5] overflow-hidden border border-neutral-100 group cursor-pointer"
-              >
-                <img
-                  src={galleryList[0] || product.image}
-                  alt={`${product.name} studio shot`}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute bottom-3 right-3 p-2 bg-white/80 backdrop-blur-xs rounded-full shadow-sm text-neutral-800 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all">
-                  <ZoomIn size={16} />
-                </div>
-              </div>
+          {/* ── MAIN 3-COL LAYOUT ── */}
+          <div className="pdp-grid">
 
-              {/* Media Item 2: Video OR Model Campaign Shot */}
-              {videoUrl ? (
-                <div className="relative bg-black aspect-[4/5] overflow-hidden border border-neutral-100 group">
-                  <video
-                    src={videoUrl}
-                    controls
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-xs text-white text-[10px] font-bold tracking-widest px-2.5 py-1 uppercase rounded-sm flex items-center gap-1">
-                    <Film size={12} className="text-amber-400" /> CAMPAIGN VIDEO
-                  </div>
-                </div>
-              ) : galleryList[1] ? (
-                <div 
-                  onClick={() => setZoomImage(galleryList[1])}
-                  className="relative bg-[#f4f4f4] aspect-[4/5] overflow-hidden border border-neutral-100 group cursor-pointer"
-                >
-                  <img
-                    src={galleryList[1]}
-                    alt={`${product.name} campaign view`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute bottom-3 right-3 p-2 bg-white/80 backdrop-blur-xs rounded-full shadow-sm text-neutral-800 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all">
-                    <ZoomIn size={16} />
-                  </div>
-                </div>
-              ) : null}
-
-              {/* Media Item 3: Secondary / Trousers / Detail Close-up */}
-              {(galleryList[2] || product.hoverImage) && (
-                <div 
-                  onClick={() => setZoomImage(galleryList[2] || product.hoverImage)}
-                  className="relative bg-[#f4f4f4] aspect-[4/5] overflow-hidden border border-neutral-100 group cursor-pointer sm:col-span-1"
-                >
-                  <img
-                    src={galleryList[2] || product.hoverImage}
-                    alt={`${product.name} detail shot`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute bottom-3 right-3 p-2 bg-white/80 backdrop-blur-xs rounded-full shadow-sm text-neutral-800 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all">
-                    <ZoomIn size={16} />
-                  </div>
-                </div>
-              )}
-
-              {/* Additional Gallery Images */}
-              {galleryList.slice(3).map((extraImg, idx) => (
-                <div 
-                  key={idx}
-                  onClick={() => setZoomImage(extraImg)}
-                  className="relative bg-[#f4f4f4] aspect-[4/5] overflow-hidden border border-neutral-100 group cursor-pointer"
-                >
-                  <img
-                    src={extraImg}
-                    alt={`${product.name} gallery ${idx + 4}`}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute bottom-3 right-3 p-2 bg-white/80 backdrop-blur-xs rounded-full shadow-sm text-neutral-800 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all">
-                    <ZoomIn size={16} />
-                  </div>
-                </div>
-              ))}
-
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN: Product Details & Purchase Options (5 Cols) */}
-          <div className="lg:col-span-5 space-y-6 sticky top-24">
-            
-            {/* Title & Price */}
-            <div className="space-y-4">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-[0.08em] text-neutral-950 uppercase font-serif-luxury">
+            {/* COL 1: Left info panel */}
+            <div className="pdp-left-info">
+              <p style={{ fontFamily: TF, fontSize: "9px", fontWeight: 700, letterSpacing: "0.22em", color: "#999", textTransform: "uppercase", marginBottom: 10 }}>
+                {product.category || "SUITS"}
+              </p>
+              <h1 style={{ fontFamily: TF, fontSize: "clamp(16px,1.8vw,22px)", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "#000", margin: "0 0 10px 0", lineHeight: 1.2 }}>
                 {product.name}
               </h1>
-              <p className="text-lg sm:text-xl font-semibold tracking-tight text-neutral-900 font-sans">
-                {product.formattedPrice || `$${Number(product.price).toLocaleString('en-US', { minimumFractionDigits: 2 })}`}
+              <p style={{ fontFamily: TF, fontSize: "clamp(14px,1.4vw,17px)", fontWeight: 400, letterSpacing: "0.04em", color: "#000", marginBottom: 20 }}>
+                {product.formattedPrice || `$${Number(product.price).toLocaleString("en-US", { minimumFractionDigits: 2 })}`}
               </p>
+              <p style={{ fontFamily: TF, fontSize: "12px", fontWeight: 400, letterSpacing: "0.03em", color: "#555", lineHeight: 1.8, marginBottom: 24 }}>
+                {product.description || "Masterfully crafted from superfine Italian wool, this suit embodies fluid sophistication with sculpted shoulders and defined lapels."}
+              </p>
+
+              {/* Accordions in left panel */}
+              <Accordion label="Details" defaultOpen>
+                <div style={{ fontFamily: TF, fontSize: "11px", color: "#555", lineHeight: 2, letterSpacing: "0.04em" }}>
+                  <p>• <strong style={{ color: "#000" }}>Material:</strong> {product.material || "100% Super 150s Italian Wool"}</p>
+                  <p>• <strong style={{ color: "#000" }}>Fit:</strong> {product.fit || "Modern Slim Tailored"}</p>
+                  <p>• <strong style={{ color: "#000" }}>Color:</strong> {product.color || "Classic"}</p>
+                  <p>• <strong style={{ color: "#000" }}>Lining:</strong> 100% Cupro Silk</p>
+                  <p>• <strong style={{ color: "#000" }}>Origin:</strong> Made in Italy</p>
+                </div>
+              </Accordion>
+              <Accordion label="Care Instructions">
+                <div style={{ fontFamily: TF, fontSize: "11px", color: "#555", lineHeight: 2, letterSpacing: "0.04em" }}>
+                  <p>• Specialist dry clean only</p>
+                  <p>• Steam iron on low heat</p>
+                  <p>• Store on wide wooden hanger</p>
+                  <p>• Avoid direct sunlight</p>
+                </div>
+              </Accordion>
+              <Accordion label="Shipping & Returns">
+                <div style={{ fontFamily: TF, fontSize: "11px", color: "#555", lineHeight: 2, letterSpacing: "0.04em" }}>
+                  <p>• Free standard shipping worldwide</p>
+                  <p>• Express delivery available</p>
+                  <p>• 30-day free returns</p>
+                  <p>• Duty & taxes included</p>
+                </div>
+              </Accordion>
+              <div style={{ height: 1, background: "#e8e8e8" }} />
             </div>
 
-            {/* Description Paragraph */}
-            <div className="text-sm leading-relaxed text-neutral-600 font-normal border-b border-neutral-100 pb-6">
-              {product.description ||
-                'Tailored from superfine wool in an opulent deep river blue, this suit embodies fluid sophistication. The sculpted shoulders and defined peak lapels create a commanding silhouette, while the feather light weave moves with quiet ease. A masterclass in modern tailoring where depth of color meets precision craftsmanship.'}
-            </div>
-
-            {/* Size Selector Section */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold tracking-widest text-neutral-900 uppercase">
-                  SIZE (US)
-                </span>
+            {/* COL 2: Center — large image + thumbnail strip */}
+            <div>
+              {/* Main Image */}
+              <div style={{ position: "relative", overflow: "hidden" }}>
+                <img
+                  className="pdp-main-img"
+                  src={galleryImages[activeImg] || product.image}
+                  alt={product.name}
+                  onClick={() => setLightbox(true)}
+                />
+                {/* Wishlist overlay */}
                 <button
-                  onClick={() => setSizeChartOpen(!sizeChartOpen)}
-                  className="text-[11px] font-bold tracking-wider text-neutral-500 hover:text-black uppercase underline underline-offset-4 cursor-pointer"
+                  onClick={() => toggleWishlist(pId)}
+                  style={{
+                    position: "absolute", top: 16, right: 16,
+                    background: "rgba(255,255,255,0.88)", border: "none", cursor: "pointer",
+                    width: 40, height: 40, borderRadius: "50%",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    backdropFilter: "blur(4px)",
+                  }}
+                  aria-label="Wishlist"
                 >
-                  SIZE CHART
+                  <Heart size={18} strokeWidth={1.5} fill={isWishlisted ? "#e00" : "none"} style={{ color: isWishlisted ? "#e00" : "#000" }} />
+                </button>
+                {/* Badge */}
+                {(product.isNew || product.isBestseller || product.isFeatured) && (
+                  <span style={{ position: "absolute", top: 16, left: 16, fontFamily: TF, fontSize: "9px", fontWeight: 700, letterSpacing: "0.18em", textTransform: "uppercase", color: "#fff", background: "#000", padding: "3px 10px" }}>
+                    {product.isNew ? "New" : product.isBestseller ? "Bestseller" : "Featured"}
+                  </span>
+                )}
+              </div>
+
+              {/* Thumbnail strip */}
+              {galleryImages.length > 1 && (
+                <div className="pdp-thumb-strip" style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
+                  {galleryImages.map((img, i) => (
+                    <img
+                      key={i}
+                      src={img}
+                      alt={`View ${i + 1}`}
+                      className={`pdp-thumb${activeImg === i ? " active" : ""}`}
+                      onClick={() => setActiveImg(i)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* COL 3: Right purchase panel */}
+            <div className="pdp-right">
+
+              {/* Size Guide link */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <p style={{ fontFamily: TF, fontSize: "10px", fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#000" }}>
+                  Select Your Size
+                </p>
+                <button
+                  onClick={() => setSizeGuideOpen(!sizeGuideOpen)}
+                  style={{ background: "none", border: "none", cursor: "pointer", fontFamily: TF, fontSize: "10px", fontWeight: 400, letterSpacing: "0.1em", textTransform: "uppercase", color: "#000", textDecoration: "underline" }}
+                >
+                  Size Guide
                 </button>
               </div>
 
-              {/* Size Chart Modal / Drawer Toggle */}
-              {sizeChartOpen && (
-                <div className="p-4 bg-neutral-50 border border-neutral-200 text-xs text-neutral-700 space-y-2 animate-in fade-in">
-                  <p className="font-bold text-black uppercase">Standard Suit Sizing (US Inches):</p>
-                  <p>38: Chest 38" | Waist 32" | Shoulder 17.5"</p>
-                  <p>40: Chest 40" | Waist 34" | Shoulder 18.0"</p>
-                  <p>42: Chest 42" | Waist 36" | Shoulder 18.5"</p>
-                  <p>44: Chest 44" | Waist 38" | Shoulder 19.0"</p>
-                  <p className="text-[10px] text-neutral-500 italic mt-1">Need custom tailoring? Contact our Milan atelier after order placement.</p>
+              {/* Size guide panel */}
+              {sizeGuideOpen && (
+                <div style={{ background: "#f9f9f9", border: "1px solid #e8e8e8", padding: "14px 16px", marginBottom: 14 }}>
+                  <p style={{ fontFamily: TF, fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#000", marginBottom: 8 }}>Standard Sizing</p>
+                  {isSuit ? (
+                    [["36", "36\" Chest / 30\" Waist"], ["38", "38\" Chest / 32\" Waist"], ["40", "40\" Chest / 34\" Waist"], ["42", "42\" Chest / 36\" Waist"], ["44", "44\" Chest / 38\" Waist"]].map(([s, d]) => (
+                      <p key={s} style={{ fontFamily: TF, fontSize: "10px", color: "#555", lineHeight: 1.8 }}><strong>{s}:</strong> {d}</p>
+                    ))
+                  ) : (
+                    [["XS", "Chest 34-36\""], ["S", "Chest 36-38\""], ["M", "Chest 38-40\""], ["L", "Chest 40-42\""], ["XL", "Chest 42-44\""], ["XXL", "Chest 44-46\""]].map(([s, d]) => (
+                      <p key={s} style={{ fontFamily: TF, fontSize: "10px", color: "#555", lineHeight: 1.8 }}><strong>{s}:</strong> {d}</p>
+                    ))
+                  )}
+                  <p style={{ fontFamily: TF, fontSize: "9px", color: "#999", marginTop: 6, fontStyle: "italic" }}>Model is 6'1" wearing size L</p>
                 </div>
               )}
 
-              {/* Sizes Grid */}
-              <div className="grid grid-cols-4 sm:grid-cols-4 gap-2">
-                {sizes.map((s) => {
-                  const isSelected = selectedSize === s;
+              {/* Fit hint */}
+              <p style={{ fontFamily: TF, fontSize: "10px", color: "#777", letterSpacing: "0.04em", marginBottom: 16, lineHeight: 1.6 }}>
+                Tailored fit — select your normal size.
+              </p>
+
+              {/* Size buttons */}
+              <div style={{ display: "grid", gridTemplateColumns: `repeat(${Math.min(sizeOptions.length, 6)}, 1fr)`, gap: "6px", marginBottom: 8 }}>
+                {sizeOptions.map(s => (
+                  <button
+                    key={s}
+                    className={`pdp-size-btn${selectedSize === s ? " selected" : ""}`}
+                    onClick={() => { setSelectedSize(s); setSizeError(false); }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+
+              {sizeError && (
+                <p style={{ fontFamily: TF, fontSize: "10px", color: "#e00", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 12 }}>
+                  Please select a size
+                </p>
+              )}
+
+              {/* Add to Bag */}
+              <button
+                className={`pdp-add-btn${addedFlash ? " flash" : ""}`}
+                onClick={handleAddToCart}
+                style={{ marginTop: 16 }}
+              >
+                <ShoppingBag size={16} strokeWidth={1.5} />
+                {addedFlash ? "Added to Bag ✓" : "Add to Bag"}
+              </button>
+
+              {/* Wishlist text link */}
+              <button
+                onClick={() => toggleWishlist(pId)}
+                style={{ width: "100%", marginTop: 10, background: "none", border: "1px solid #d0d0d0", padding: "12px 0", cursor: "pointer", fontFamily: TF, fontSize: "10px", fontWeight: 400, letterSpacing: "0.14em", textTransform: "uppercase", color: "#000", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, transition: "border-color 0.2s" }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = "#000"}
+                onMouseLeave={e => e.currentTarget.style.borderColor = "#d0d0d0"}
+              >
+                <Heart size={14} strokeWidth={1.5} fill={isWishlisted ? "#e00" : "none"} style={{ color: isWishlisted ? "#e00" : "#000" }} />
+                {isWishlisted ? "Saved to Wishlist" : "Save to Wishlist"}
+              </button>
+
+              {/* Shipping note */}
+              <div style={{ marginTop: 24, borderTop: "1px solid #e8e8e8", paddingTop: 20 }}>
+                <p style={{ fontFamily: TF, fontSize: "10px", fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "#000", marginBottom: 8 }}>
+                  Shipping & Returns
+                  <span style={{ float: "right", fontWeight: 400, fontSize: 14 }}>∧</span>
+                </p>
+                <p style={{ fontFamily: TF, fontSize: "10px", color: "#555", lineHeight: 1.8, letterSpacing: "0.04em" }}>
+                  Free International Shipping<br />
+                  Duty & Taxes Included<br />
+                  <span style={{ textDecoration: "underline", cursor: "pointer" }}>View shipping & returns</span>
+                </p>
+              </div>
+
+              {/* Reviews summary */}
+              <div style={{ marginTop: 24, borderTop: "1px solid #e8e8e8", paddingTop: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
+                  {[...Array(5)].map((_, i) => <Star key={i} size={13} fill="#000" style={{ color: "#000" }} />)}
+                  <span style={{ fontFamily: TF, fontSize: "10px", letterSpacing: "0.1em", color: "#000" }}>({reviews.length} reviews)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── REVIEWS ── */}
+          <div style={{ borderTop: "1px solid #e8e8e8", marginTop: 64, paddingTop: 48 }}>
+            <p style={{ fontFamily: TF, fontSize: "10px", fontWeight: 700, letterSpacing: "0.24em", textTransform: "uppercase", color: "#000", marginBottom: 32 }}>
+              Client Reviews
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 32 }}>
+              {reviews.map(rev => (
+                <div key={rev.id} style={{ borderTop: "1px solid #e8e8e8", paddingTop: 20 }}>
+                  <div style={{ display: "flex", gap: 2, marginBottom: 10 }}>
+                    {[...Array(rev.rating)].map((_, i) => <Star key={i} size={12} fill="#000" style={{ color: "#000" }} />)}
+                  </div>
+                  <p style={{ fontFamily: TF, fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#000", marginBottom: 6 }}>
+                    {rev.author} <span style={{ fontWeight: 400, color: "#4a9" }}>✓ Verified</span>
+                  </p>
+                  <p style={{ fontFamily: TF, fontSize: "11px", color: "#555", lineHeight: 1.8, fontStyle: "italic" }}>"{rev.comment}"</p>
+                  <p style={{ fontFamily: TF, fontSize: "9px", color: "#bbb", marginTop: 8, letterSpacing: "0.08em" }}>{rev.date}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── YOU MAY ALSO LIKE ── */}
+          {relatedProducts.length > 0 && (
+            <div style={{ borderTop: "1px solid #e8e8e8", marginTop: 64, paddingTop: 48 }}>
+              <p style={{ fontFamily: TF, fontSize: "10px", fontWeight: 700, letterSpacing: "0.24em", textTransform: "uppercase", color: "#000", marginBottom: 32 }}>
+                You May Also Like
+              </p>
+              <div className="related-grid">
+                {relatedProducts.map(rp => {
+                  const rpId = rp.id || rp._id;
                   return (
-                    <button
-                      key={s}
-                      onClick={() => setSelectedSize(s)}
-                      className={`py-3 text-xs font-medium border transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-neutral-950 text-white border-neutral-950 font-bold shadow-sm'
-                          : 'bg-white text-neutral-800 border-neutral-300 hover:border-neutral-900'
-                      }`}
-                    >
-                      {s}
-                    </button>
+                    <div key={rpId} className="related-card" onClick={() => { /* open product */ }}>
+                      <div style={{ overflow: "hidden", marginBottom: 12 }}>
+                        <img className="related-img" src={rp.image} alt={rp.name} />
+                      </div>
+                      <p style={{ fontFamily: TF, fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#000", marginBottom: 4 }}>{rp.name}</p>
+                      <p style={{ fontFamily: TF, fontSize: "11px", color: "#555" }}>{rp.formattedPrice}</p>
+                    </div>
                   );
                 })}
               </div>
             </div>
+          )}
 
-            {/* Action Buttons: ADD TO BAG & Apple Pay */}
-            <div className="space-y-3 pt-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Button
-                  variant="primary"
-                  icon={ShoppingBag}
-                  size="lg"
-                  fullWidth
-                  onClick={handleAddToCart}
-                >
-                  ADD TO BAG
-                </Button>
-
-                <Button
-                  variant="subtle"
-                  size="lg"
-                  fullWidth
-                  onClick={handleApplePay}
-                  className="bg-[#8c8c8c] hover:bg-neutral-700 text-white border-0"
-                >
-                  <span className="text-lg leading-none mr-1"></span> Pay
-                </Button>
-              </div>
-
-              {/* Financing Text */}
-              <p className="text-center sm:text-left text-[11px] text-neutral-500">
-                Starting at $103/mo or 0% APR with <span className="font-bold text-neutral-900 underline cursor-pointer">affirm</span>. <button className="hover:underline text-neutral-700 cursor-pointer">See if you qualify</button>
-              </p>
-            </div>
-
-            {/* Accordion: DETAIL & CARE */}
-            <div className="border-t border-b border-neutral-200 py-4">
-              <button
-                onClick={() => setDetailCareOpen(!detailCareOpen)}
-                className="w-full flex items-center justify-between text-xs font-bold tracking-[0.18em] text-neutral-900 uppercase py-1 cursor-pointer"
-              >
-                <span>DETAIL & CARE</span>
-                {detailCareOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              </button>
-
-              {detailCareOpen && (
-                <div className="pt-3 text-xs text-neutral-600 space-y-2 leading-relaxed animate-in fade-in">
-                  <p>• <strong>Material:</strong> {product.material || '100% Super 150s Italian Virgin Wool'}</p>
-                  <p>• <strong>Fit:</strong> {product.fit || 'Modern Tailored Slim Fit'}</p>
-                  <p>• <strong>Color:</strong> {product.color || 'Electric Royal Blue'}</p>
-                  <p>• <strong>Lining:</strong> 100% Cupro Silk Lining with Bemberg finish</p>
-                  <p>• <strong>Care:</strong> Specialist dry clean only. Steam iron low heat.</p>
-                </div>
-              )}
-            </div>
-
-          </div>
         </div>
-
-        {/* CLIENT REVIEWS SECTION */}
-        <div className="border-t border-neutral-200 pt-12 mt-12">
-          <SectionHeader
-            title="CLIENT REVIEWS"
-            align="left"
-            className="mb-8"
-          />
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-            
-            {/* Reviews List (7 Cols) */}
-            <div className="lg:col-span-7 space-y-6">
-              {reviews.map((rev) => (
-                <div key={rev.id} className="border-b border-neutral-100 pb-6 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-amber-500">
-                      {[...Array(rev.rating)].map((_, i) => (
-                        <Star key={i} size={14} fill="currentColor" />
-                      ))}
-                    </div>
-                    <span className="text-[10px] text-neutral-400 font-mono">{rev.date}</span>
-                  </div>
-
-                  <p className="text-xs font-bold text-neutral-900 uppercase tracking-wider">
-                    {rev.author} <span className="text-[10px] text-emerald-600 font-normal lowercase tracking-normal flex-inline items-center gap-1 ml-1"><Check size={10} className="inline" /> Verified Buyer</span>
-                  </p>
-
-                  <p className="text-xs text-neutral-600 italic leading-relaxed">
-                    "{rev.comment}"
-                  </p>
-                </div>
-              ))}
-            </div>
-
-            {/* Review Submission Notice or Form Box (5 Cols) */}
-            <div className="lg:col-span-5">
-              {user ? (
-                <div className="border border-neutral-900 p-6 bg-neutral-50 space-y-4">
-                  <h3 className="text-xs font-bold tracking-wider uppercase text-neutral-900">
-                    Leave a Client Review
-                  </h3>
-
-                  <form onSubmit={handleAddReview} className="space-y-4">
-                    <div>
-                      <label className="block text-[11px] font-bold text-neutral-700 uppercase mb-1">
-                        Rating
-                      </label>
-                      <select
-                        value={newRating}
-                        onChange={(e) => setNewRating(e.target.value)}
-                        className="w-full bg-white border border-neutral-300 px-3 py-2 text-xs text-neutral-900 focus:outline-none"
-                      >
-                        <option value="5">5 Stars - Excellent</option>
-                        <option value="4">4 Stars - Very Good</option>
-                        <option value="3">3 Stars - Average</option>
-                        <option value="2">2 Stars - Poor</option>
-                        <option value="1">1 Star - Terrible</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-bold text-neutral-700 uppercase mb-1">
-                        Your Review
-                      </label>
-                      <textarea
-                        required
-                        rows="4"
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                        placeholder="Share your experience with this garment's fit, fabric, and craftsmanship..."
-                        className="w-full bg-white border border-neutral-300 p-3 text-xs text-neutral-900 focus:outline-none"
-                      />
-                    </div>
-
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      fullWidth
-                      isLoading={submittingReview}
-                    >
-                      {submittingReview ? 'SUBMITTING...' : 'SUBMIT REVIEW'}
-                    </Button>
-                  </form>
-                </div>
-              ) : (
-                <div className="border border-neutral-900 p-8 text-center bg-white shadow-xs">
-                  <p className="text-xs text-neutral-600 font-medium leading-relaxed">
-                    Only logged in customers who have purchased this product may leave a review.
-                  </p>
-                </div>
-              )}
-            </div>
-
-          </div>
-        </div>
-
       </div>
 
-      {/* Fullscreen Zoom Lightbox Modal */}
-      <Modal
-        isOpen={Boolean(zoomImage)}
-        onClose={() => setZoomImage(null)}
-        maxWidth="max-w-4xl"
-        className="bg-transparent shadow-none p-2"
-      >
-        <div className="flex items-center justify-center p-2">
-          <img
-            src={zoomImage}
-            alt="Zoomed Product Details"
-            className="max-w-full max-h-[85vh] object-contain shadow-2xl"
-          />
+      {/* Lightbox */}
+      {lightbox && (
+        <div className="lb-overlay" onClick={() => setLightbox(false)}>
+          <button onClick={() => setLightbox(false)} style={{ position: "absolute", top: 24, right: 24, background: "none", border: "none", cursor: "pointer", color: "#fff" }}>
+            <X size={28} strokeWidth={1} />
+          </button>
+          <img className="lb-img" src={galleryImages[activeImg] || product.image} alt={product.name} onClick={e => e.stopPropagation()} />
         </div>
-      </Modal>
-    </div>
+      )}
+    </>
   );
 };
